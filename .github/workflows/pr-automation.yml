@@ -22,7 +22,7 @@ jobs:
 
             if (!regex.test(title)) {
 
-              // ❌ Add Label
+              // 🏷️ Add "needs correction" label
               await github.rest.issues.addLabels({
                 issue_number: prNumber,
                 owner: owner,
@@ -30,16 +30,15 @@ jobs:
                 labels: ["needs correction"]
               });
 
-              // 💬 Add Comment
+              // 💬 Add helpful comment
               await github.rest.issues.createComment({
                 issue_number: prNumber,
                 owner: owner,
                 repo: repo,
-                body: `
-❌ **Invalid Pull Request Title Format**
+                body: `❌ **Invalid Pull Request Title Format**
 
 📌 **Required Format:**
-\`<Project Name> | <Roll Number>\`
+<Project Name> | <Roll Number>
 
 ---
 
@@ -61,10 +60,21 @@ jobs:
 
 ---
 
-👉 Please edit your PR title to proceed.
-                `
+👉 Please edit your PR title to proceed.`
               });
 
               // ❌ Fail the workflow
-              core.setFailed("PR title format is incorrect. Please check the guidelines.");
+              core.setFailed("PR title format is incorrect. Please follow the required format.");
+            } else {
+              // ✅ Remove "needs correction" label if it exists
+              try {
+                await github.rest.issues.removeLabel({
+                  issue_number: prNumber,
+                  owner: owner,
+                  repo: repo,
+                  name: "needs correction"
+                });
+              } catch (error) {
+                // Label might not exist, ignore the error
+              }
             }
